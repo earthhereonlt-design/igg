@@ -216,10 +216,22 @@ async function startServer() {
         // Generate via Gemini
         const ai = getAI();
         const response = await ai.models.generateContent({
-          model: "gemini-3.1-flash-preview",
-          contents: "Generate 5 useful advanced IELTS vocabulary words. Return JSON as an array of objects, where each object has 'word', 'meaning', and 'example' (a sentence). Just return the JSON array, no markdown.",
+          model: "gemini-3-flash-preview", // Updated to valid valid model string
+          contents: "Generate exactly 5 useful advanced IELTS vocabulary words. Return JSON as an array of objects. Format: [{'word': '...', 'meaning': '...', 'example': '...'}]",
           config: {
             responseMimeType: "application/json",
+            responseSchema: {
+              type: "ARRAY",
+              items: {
+                type: "OBJECT",
+                properties: {
+                  word: { type: "STRING" },
+                  meaning: { type: "STRING" },
+                  example: { type: "STRING" }
+                },
+                required: ["word", "meaning", "example"]
+              }
+            }
           }
         });
         
@@ -228,6 +240,10 @@ async function startServer() {
           words = JSON.parse(response.text?.trim() || "[]");
         } catch(e) {
           console.error("Failed to parse vocab", response.text);
+        }
+
+        if (!Array.isArray(words) || words.length === 0) {
+          throw new Error("AI returned empty or invalid words");
         }
 
         const { data: newData, error: insertError } = await supabase
