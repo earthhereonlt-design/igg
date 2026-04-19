@@ -1,0 +1,77 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-apple-bg-light: #F5F5F7;
+  --color-apple-card-light: #FFFFFF;
+  --color-apple-text-light: #1D1D1F;
+  --color-apple-text-secondary-light: #86868B;
+  
+  --color-apple-bg-dark: #000000;
+  --color-apple-card-dark: #1C1C1E;
+  --color-apple-text-dark: #F5F5F7;
+  --color-apple-text-secondary-dark: #A1A1A6;
+
+  --color-accent: #2997FF; /* Apple blue */
+  --color-nike-orange: #FF6600; /* Nike touch */
+
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+@layer base {
+  :root {
+    --bg: var(--color-apple-bg-light);
+    --card: var(--color-apple-card-light);
+    --text: var(--color-apple-text-light);
+    --text-sec: var(--color-apple-text-secondary-light);
+    --border: rgba(0, 0, 0, 0.1);
+    --glass: rgba(255, 255, 255, 0.7);
+  }
+
+  /* Default to dark mode if preferred, or toggle via class */
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: var(--color-apple-bg-dark);
+      --card: var(--color-apple-card-dark);
+      --text: var(--color-apple-text-dark);
+      --text-sec: var(--color-apple-text-secondary-dark);
+      --border: rgba(255, 255, 255, 0.1);
+      --glass: rgba(28, 28, 30, 0.7);
+    }
+  }
+
+  .dark {
+      --bg: var(--color-apple-bg-dark);
+      --card: var(--color-apple-card-dark);
+      --text: var(--color-apple-text-dark);
+      --text-sec: var(--color-apple-text-secondary-dark);
+      --border: rgba(255, 255, 255, 0.1);
+      --glass: rgba(28, 28, 30, 0.7);
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+}
+
+@layer components {
+  .glass-card {
+    background-color: var(--glass);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+  }
+  
+  .glass-nav {
+    background-color: var(--glass);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border);
+  }
+}
+
