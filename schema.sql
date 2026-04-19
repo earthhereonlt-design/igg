@@ -37,6 +37,9 @@ CREATE TABLE daily_progress (
   mistakes_analyzed BOOLEAN DEFAULT FALSE,
   synonyms_completed BOOLEAN DEFAULT FALSE,
   
+  -- Vocab Tracker
+  words_learned JSONB DEFAULT '[]'::jsonb,
+  
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
   
   -- Ensure only one entry per user per day
@@ -59,3 +62,6 @@ CREATE TABLE daily_vocab (
 -- ALTER TABLE daily_progress ADD COLUMN speaking_cue_cards INT DEFAULT 0;
 -- ALTER TABLE daily_progress ADD COLUMN speaking_intro_questions INT DEFAULT 0;
 -- ALTER TABLE daily_progress ADD COLUMN speaking_practice_done BOOLEAN DEFAULT FALSE;
+
+-- Migration to add words learned tracking:
+-- ALTER TABLE daily_progress ADD COLUMN words_learned JSONB DEFAULT '[]'::jsonb;

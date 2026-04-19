@@ -7,6 +7,7 @@ export default function Dashboard() {
   const [progress, setProgress] = useState<any>(null);
   const [vocab, setVocab] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [generatingVocab, setGeneratingVocab] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -31,6 +32,28 @@ export default function Dashboard() {
     } catch (err) {
       console.error(err);
     }
+  };
+
+  const handleRegenerateVocab = async () => {
+    setGeneratingVocab(true);
+    try {
+      const res = await fetchAPI('/vocab/generate', { method: 'POST' });
+      setVocab(res);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to generate new vocabulary.");
+    } finally {
+      setGeneratingVocab(false);
+    }
+  };
+
+  const toggleWordLearned = (word: string) => {
+    const currentLearned = progress?.words_learned || [];
+    const isLearned = currentLearned.includes(word);
+    const newLearned = isLearned 
+      ? currentLearned.filter((w: string) => w !== word)
+      : [...currentLearned, word];
+    updateProgress({ words_learned: newLearned });
   };
 
   const calculatePerformance = (correct: number, total: number) => {
@@ -242,19 +265,42 @@ export default function Dashboard() {
 
         {/* Daily Vocabulary */}
         <section className="glass-card p-6 lg:col-span-4">
-          <h2 className="text-2xl font-bold tracking-tight mb-6">Word of the Day</h2>
-          {vocab?.words ? (
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+            <h2 className="text-2xl font-bold tracking-tight">Word of the Day</h2>
+            <button 
+              onClick={handleRegenerateVocab} 
+              disabled={generatingVocab} 
+              className="px-4 py-2 bg-[#2997FF]/10 text-[#2997FF] hover:bg-[#2997FF] hover:text-white rounded-lg transition-all text-sm font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {generatingVocab ? "Generating..." : "Generate Fresh Words"}
+            </button>
+          </div>
+          {vocab && vocab.words && vocab.words.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {vocab.words.map((w: any, i: number) => (
-                <div key={i} className="p-4 rounded-xl bg-[var(--border)] border border-transparent hover:border-[#2997FF] transition-all">
-                  <h3 className="font-bold text-lg text-[#2997FF]">{w.word}</h3>
-                  <p className="text-sm font-medium mt-1">{w.meaning}</p>
-                  <p className="text-sm text-[var(--text-sec)] mt-2 italic">"{w.example}"</p>
-                </div>
-              ))}
+              {vocab.words.map((w: any, i: number) => {
+                const isLearned = (progress?.words_learned || []).includes(w.word);
+                return (
+                  <div key={i} className={`p-4 rounded-xl border transition-all ${isLearned ? 'bg-green-500/5 border-green-500/30' : 'bg-[var(--border)] border-transparent hover:border-[#2997FF]'}`}>
+                    <div className="flex justify-between items-start">
+                      <h3 className={`font-bold text-lg ${isLearned ? 'text-green-500' : 'text-[#2997FF]'}`}>{w.word}</h3>
+                      <button 
+                        onClick={() => toggleWordLearned(w.word)}
+                        className={`p-1 rounded-full transition-colors ${isLearned ? 'text-green-500' : 'text-[var(--text-sec)] hover:text-[#2997FF]'}`}
+                        title={isLearned ? "Mark as unlearned" : "Mark as learned"}
+                      >
+                        {isLearned ? <CheckCircle2 size={20} /> : <Circle size={20} />}
+                      </button>
+                    </div>
+                    <p className="text-sm font-medium mt-1">{w.meaning}</p>
+                    <p className="text-sm text-[var(--text-sec)] mt-2 italic">"{w.example}"</p>
+                  </div>
+                );
+              })}
             </div>
-          ) : (
+          ) : vocab === null ? (
             <div className="text-[var(--text-sec)]">Loading vocabulary from Gemini...</div>
+          ) : (
+            <div className="text-red-500">Failed to load vocabulary. Please try refreshing.</div>
           )}
         </section>
 

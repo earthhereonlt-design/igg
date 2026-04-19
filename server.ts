@@ -212,11 +212,12 @@ async function startServer() {
         .eq("date", dateStr)
         .single();
 
-      if (!data) {
+      // If data is null or words is empty, we must generate via AI.
+      if (!data || !data.words || data.words.length === 0) {
         // Generate via Gemini
         const ai = getAI();
         const response = await ai.models.generateContent({
-          model: "gemini-3-flash-preview", // Updated to valid valid model string
+          model: "gemini-2.5-flash", // Standard model
           contents: "Generate exactly 5 useful advanced IELTS vocabulary words. Return JSON as an array of objects. Format: [{'word': '...', 'meaning': '...', 'example': '...'}]",
           config: {
             responseMimeType: "application/json",
@@ -246,19 +247,89 @@ async function startServer() {
           throw new Error("AI returned empty or invalid words");
         }
 
-        const { data: newData, error: insertError } = await supabase
-          .from("daily_vocab")
-          .insert([{ date: dateStr, words }])
-          .select()
-          .single();
-        
-        if (insertError) throw insertError;
-        data = newData;
+        if (data && data.id) {
+          // Row exists but is empty, update it
+          const { data: updatedData, error: updateError } = await supabase
+            .from("daily_vocab")
+            .update({ words })
+            .eq("id", data.id)
+            .select()
+            .single();
+          if (updateError) throw updateError;
+          data = updatedData;
+        } else {
+          // Row doesn't exist at all, insert
+          const { data: newData, error: insertError } = await supabase
+            .from("daily_vocab")
+            .insert([{ date: dateStr, words }])
+            .select()
+            .single();
+          if (insertError) throw insertError;
+          data = newData;
+        }
       }
       res.json(data);
     } catch (error: any) {
       console.error(error);
       res.status(500).json({ error: error.message || "Failed to fetch vocab" });
+    }
+  });
+
+  // Force generate fresh vocab
+  app.post("/api/vocab/generate", authMiddleware, async (req: any, res: any) => {
+    const dateStr = new Date().toISOString().split("T")[0];
+    
+    try {
+      const ai = getAI();
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: "Generate exactly 5 NEW and extremely useful advanced IELTS vocabulary words (different from common ones). Return JSON as an array of objects. Format: [{'word': '...', 'meaning': '...', 'example': '...'}]",
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: "ARRAY",
+            items: {
+              type: "OBJECT",
+              properties: {
+                word: { type: "STRING" },
+                meaning: { type: "STRING" },
+                example: { type: "STRING" }
+              },
+              required: ["word", "meaning", "example"]
+            }
+          }
+        }
+      });
+      
+      let words = [];
+      try {
+        words = JSON.parse(response.text?.trim() || "[]");
+      } catch(e) {
+        console.error("Failed to parse freshly generated vocab", response.text);
+      }
+
+      if (!Array.isArray(words) || words.length === 0) {
+        throw new Error("AI returned empty or invalid words");
+      }
+
+      const supabase = getSupabase();
+      const { data: existing } = await supabase.from("daily_vocab").select("id").eq("date", dateStr).single();
+      
+      let finalData;
+      if (existing) {
+        const { data, error } = await supabase.from("daily_vocab").update({ words }).eq("id", existing.id).select().single();
+        if (error) throw error;
+        finalData = data;
+      } else {
+        const { data, error } = await supabase.from("daily_vocab").insert([{ date: dateStr, words }]).select().single();
+        if (error) throw error;
+        finalData = data;
+      }
+      
+      res.json(finalData);
+    } catch (error: any) {
+      console.error(error);
+      res.status(500).json({ error: error.message || "Failed to generate fresh vocab" });
     }
   });
 
