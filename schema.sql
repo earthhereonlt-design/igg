@@ -26,6 +26,11 @@ CREATE TABLE daily_progress (
   reading_correct_answers INT DEFAULT 0,
   reading_total_questions INT DEFAULT 0,
   
+  -- Speaking
+  speaking_cue_cards INT DEFAULT 0,
+  speaking_intro_questions INT DEFAULT 0,
+  speaking_practice_done BOOLEAN DEFAULT FALSE,
+  
   -- Tasks
   writing_task1_done BOOLEAN DEFAULT FALSE,
   writing_task2_done BOOLEAN DEFAULT FALSE,
@@ -49,3 +54,8 @@ CREATE TABLE daily_vocab (
 -- Note: No Row Level Security (RLS) is applied here because
 -- the Node.js backend handles all the database operations using
 -- the Supabase URL and ANON/SERVICE Key. Our backend acts as the secure gatekeeper.
+
+-- Migration for existing database to add speaking section:
+-- ALTER TABLE daily_progress ADD COLUMN speaking_cue_cards INT DEFAULT 0;
+-- ALTER TABLE daily_progress ADD COLUMN speaking_intro_questions INT DEFAULT 0;
+-- ALTER TABLE daily_progress ADD COLUMN speaking_practice_done BOOLEAN DEFAULT FALSE;

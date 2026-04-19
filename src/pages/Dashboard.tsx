@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { fetchAPI } from '../lib/api';
 import { motion } from 'framer-motion';
-import { CheckCircle2, Circle, Headphones, BookOpen, PenTool } from 'lucide-react';
+import { CheckCircle2, Circle, Headphones, BookOpen, PenTool, Mic } from 'lucide-react';
 
 export default function Dashboard() {
   const [progress, setProgress] = useState<any>(null);
@@ -58,7 +58,7 @@ export default function Dashboard() {
         <p className="text-[var(--text-sec)]">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         
         {/* Listening Tracker */}
         <section className="glass-card p-6">
@@ -156,6 +156,58 @@ export default function Dashboard() {
           </div>
         </section>
 
+        {/* Speaking Tracker */}
+        <section className="glass-card p-6">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-2 bg-green-500/10 text-green-500 rounded-lg">
+              <Mic size={24} />
+            </div>
+            <h2 className="text-xl font-semibold">Speaking</h2>
+          </div>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="flex justify-between text-xs text-[var(--text-sec)] uppercase tracking-wider mb-1">
+                <span>Cue Cards</span>
+                <span className="font-medium text-lg text-[var(--text)]">{progress?.speaking_cue_cards || 0}</span>
+              </label>
+              <input 
+                type="number" min="0"
+                value={progress?.speaking_cue_cards || 0}
+                onChange={(e) => updateProgress({ speaking_cue_cards: parseInt(e.target.value) || 0 })}
+                className="w-full bg-[var(--border)] border border-transparent focus:border-green-500 rounded-lg p-2 outline-none"
+              />
+            </div>
+            
+            <div className="pt-2">
+              <label className="flex justify-between text-xs text-[var(--text-sec)] uppercase tracking-wider mb-1">
+                <span>Intro Questions</span>
+                <span className="font-medium text-lg text-[var(--text)]">{progress?.speaking_intro_questions || 0}</span>
+              </label>
+              <input 
+                type="number" min="0"
+                value={progress?.speaking_intro_questions || 0}
+                onChange={(e) => updateProgress({ speaking_intro_questions: parseInt(e.target.value) || 0 })}
+                className="w-full bg-[var(--border)] border border-transparent focus:border-green-500 rounded-lg p-2 outline-none"
+              />
+            </div>
+            
+            <div className="pt-4">
+              <button 
+                onClick={() => updateProgress({ speaking_practice_done: !progress?.speaking_practice_done })}
+                className="flex items-center gap-3 w-full p-2 hover:bg-[var(--border)] rounded-lg transition-colors text-left"
+              >
+                {progress?.speaking_practice_done 
+                  ? <CheckCircle2 className="text-green-500" /> 
+                  : <Circle className="text-[var(--text-sec)]" />}
+                <span className={progress?.speaking_practice_done ? 'line-through text-[var(--text-sec)]' : ''}>
+                  Full Mock Test Done
+                </span>
+              </button>
+            </div>
+          </div>
+        </section>
+
         {/* Writing & Tasks Checklist */}
         <section className="glass-card p-6">
           <div className="flex items-center gap-3 mb-6">
@@ -189,7 +241,7 @@ export default function Dashboard() {
         </section>
 
         {/* Daily Vocabulary */}
-        <section className="glass-card p-6 lg:col-span-3">
+        <section className="glass-card p-6 lg:col-span-4">
           <h2 className="text-2xl font-bold tracking-tight mb-6">Word of the Day</h2>
           {vocab?.words ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
